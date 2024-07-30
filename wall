@@ -1,7 +1,7 @@
 #!/bin/sh
 
-wall=$(find ~/wallpapers/ -type f -name "*.jpg" -o -name "*.png" | shuf -n 1)
-
+file="$1"
+wall=$(find $1)
 
 wal -c
 wal -i $wall
