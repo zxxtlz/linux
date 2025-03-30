@@ -4,8 +4,8 @@
 # Show 🌐 if connected to ethernet or ❎ if none.
 
 case $BLOCK_BUTTON in
-	1) setsid "$TERMINAL" -e nmtui & ;;
-	3) notify-send "🌐 Internet module" "\- Click to connect
+    1) setsid "$TERMINAL" -e nmtui & ;;
+    3) notify-send "🌐 Internet module" "\- Click to connect
 📡: no wifi connection
 📶: wifi connection with quality
 ❎: no ethernet
@@ -13,7 +13,17 @@ case $BLOCK_BUTTON in
 " ;;
 esac
 
-grep -q "down" /sys/class/net/w*/operstate && wifiicon="📡" ||
-	wifiicon="$(grep "^\s*w" /proc/net/wireless | awk '{ print "📶", int($3 * 100 / 70) "%" }')"
+# Default to no WiFi connection (📡)
+wifiicon="📡"
 
-printf "%s %s\n" "$wifiicon" "$(sed "s/down/❎/;s/up/🌐/" /sys/class/net/e*/operstate)"
+# Check if there's any WiFi interface (e.g., wlan0, wlp2s0, etc.) that's up
+if ip link show | grep -E "wlan|wlp" | grep -q "state UP"; then
+    # If the WiFi interface is up, check the signal strength
+    wifiicon="$(grep "^\s*w" /proc/net/wireless | awk '{ print "📶", int($3 * 100 / 70) "%" }')"
+fi
+
+# Check for Ethernet status
+ethernet_status=$(sed "s/down/❎/;s/up/🌐/" /sys/class/net/e*/operstate)
+
+# Output the status: WiFi icon and Ethernet status
+printf "%s %s\n" "$wifiicon" "$ethernet_status"
